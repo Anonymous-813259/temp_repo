@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionVote - Chief Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/authentication.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-title">VisionVote</div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="card">
+            <h2>Chief Login</h2>
+
+            <!-- Step 2: Aadhaar Number and Captcha -->
+            <form id="form-step-1" class="login-form">
+                <label for="aadhaar-number">Chief's Aadhaar Number:</label>
+                <input type="text" id="aadhaar-number" name="aadhaar-number" required>
+
+                <label for="captcha-2">Captcha:</label>
+                <br>
+                <img src="/static/{{folder_id}}/captcha/aadhaar_captcha_img.png" alt="Captcha Image" id="captcha" />
+                <button type="button" class="refresh-captcha" id="refresh-captcha">
+                    <span id="refresh">↻</span>
+                    <div class="loading-spinner hidden" id="refresh-spinner"></div>
+                </button>
+                <br>
+                <input type="text" id="captcha-text" name="captcha-2" required>
+
+                <button type="button" id="next-step" class="action-btn">
+                    <span id="text-1">Next</span>
+                    <div class="loading-spinner hidden" id="loading-spinner-1"></div>
+                </button>
+            </form>
+
+            <!-- Step 3: OTP Verification (Below Aadhaar Form) -->
+            <form id="form-step-2" class="login-form hidden">
+                <label for="otp">OTP:</label>
+                <input type="text" id="otp" name="otp" required>
+
+                <button type="button" id="verify-otp" class="action-btn">
+                    <span id="text-2">Verify OTP</span>
+                    <div class="loading-spinner hidden" id="loading-spinner-2"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Popup Container -->
+    <div id="popup-container" class="hidden">
+        <div id="popup">
+            <h2>Enter Details</h2>
+            <label for="input1">Full Name:</label>
+            <input type="text" id="name" placeholder="Enter first value">
+            <label for="input2">Year of Birth (XXXX):</label>
+            <input type="text" id="yob" placeholder="Enter second value">
+            <div class="popup-buttons">
+                <!-- <button id="close-popup">Close</button> -->
+                <button id="submit-popup">
+                    <span id="text-3">Submit</span>
+                    <div class="loading-spinner hidden" id="loading-spinner-3"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-text">By Nithin Reddy</div>
+    </footer>
+
+    <script src="../static/JS/aadhaarVerification.js"></script>
+</body>
+</html>

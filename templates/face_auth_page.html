@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionVote - Face Authentication</title>
+    <style>
+        /* Import Playfair Display font */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+        /* Global Styles */
+        body {
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(#ece9e6, #ffffff);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        header {
+            background-color: #007acc;
+            padding: 20px;
+            text-align: left;
+            color: white;
+            font-size: 1.5rem;
+            /* margin-left: 10px; */
+            padding-left: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+        /* Footer */
+        footer {
+            background-color: #ece9e6;
+            padding: 20px;
+            text-align: right;
+            color: #666;
+            opacity: 0.24;
+            padding-right: 20px;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        /* Video container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        video, canvas {
+            border: 3px solid #555;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        video {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* Capture button */
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Status message */
+        #status {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Reauthentication prompt */
+        #reauth {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        #reauth p {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #reauth button {
+            margin: 5px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/authentication.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-title">VisionVote</div>
+    </header>
+
+    <h2>Face Authentication</h2>
+
+    <div class="container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+        <br>
+        <button id="capture">Capture & Verify</button>
+        <p id="status"></p>
+    </div>
+
+    <div id="reauth">
+        <p>Would you like to reauthenticate?</p>
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+    </div>
+
+    <!-- Footer -->
+    <!-- <footer>
+        <div class="footer-text">By Nithin Reddy</div>
+    </footer> -->
+
+    <script>
+        var navigation = false;
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const statusText = document.getElementById('status');
+        const reauthDiv = document.getElementById('reauth');
+        const yesButton = document.getElementById('yes');
+        const noButton = document.getElementById('no');
+
+        // Start webcam
+        async function startCamera() {
+            await navigator.mediaDevices.getUserMedia({video: true})
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.style.display = "block";
+                })
+                .catch(err => {
+                    console.log("Accessing mobile's front cam");
+                    navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
+                    .then(stream => { 
+                        video.srcObject = stream;
+                        video.style.display = "block";
+                    })
+                    .catch(err => {
+                        // console.error("Error accessing webcam:", err);
+                        console.log("Primary camera failed, trying another:", error);
+                        navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: "environment" }
+                        })
+                        .then(stream => {
+                            video.srcObject = stream;
+                            video.style.display = "block";
+                        })
+                        .catch(finalError => {
+                            console.log("No camera found!", finalError);
+                            alert("Camera not accessible! Please allow camera permissions.");
+                        })
+                    });
+                });
+        }
+
+        // Stop webcam
+        async function stopCamera() {
+            let stream = video.srcObject;
+            if (stream) {
+                let tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            video.srcObject = null;
+            video.style.display = "none";
+        }
+
+        // Start webcam initially
+        startCamera();
+
+        // Capture and send image
+        captureButton.addEventListener('click', async () => {
+            // Disable capture button
+            captureButton.disabled = true;
+            statusText.textContent = "Processing... Please wait.";
+
+            // Capture image
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Stop video after capture
+            await stopCamera();
+
+            // Convert image to base64
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            try {
+                const response = await fetch('/face_auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const result = await response.json();
+                statusText.textContent = result.message;
+
+                // Show reauthentication prompt
+                reauthDiv.style.display = "block";
+
+            } catch (error) {
+                console.error('Error sending image:', error);
+                statusText.textContent = "Error processing request.";
+                captureButton.disabled = false;
+                await startCamera();
+            }
+        });
+
+        // Handle Reauthentication
+        yesButton.addEventListener('click', async () => {
+            reauthDiv.style.display = "none";
+            statusText.textContent = "";
+            captureButton.disabled = false;
+            await startCamera();
+        });
+
+        // Redirect to Thank You Page
+        noButton.addEventListener('click', () => {
+            navigation = true;
+            window.location.href = "/thank_you"; // Redirect to Thank You page
+        });
+
+        // Handle tab or window close
+        // Detect page unload or tab closure
+        window.addEventListener('beforeunload', async function (event) {
+            if(navigation == false){
+                await fetch('/close_session', { method: 'POST', credentials: 'include'})
+                    .then(response => response.json())
+                    .then(data => console.log('Session closed:', data))
+                    .catch(err => console.error('Error closing session:', err));
+            }
+        });
+    </script>
+</body>
+</html>
